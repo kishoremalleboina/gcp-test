@@ -1,0 +1,44 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # Required for OIDC
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # 🔹 Authenticate to GCP using OIDC
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: projects/946678058338/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+        service_account: CICD-pipeline@dev-project-490411.iam.gserviceaccount.com
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    # 🔹 Run Unit Tests
+    - name: Run Unit Tests
+      run: |
+        echo "Running tests..."
+         npm install
+         npm test
+
+    # 🔹 Build Docker Image
+    - name: Build Image
+      run: |
+        docker build -t us-central1-docker.pkg.dev/${{ vars.PROJECT_ID }}/my-repo/gcp-test:${{ github.sha }} .
+
+    # 🔹 Push Image
+    - name: Push Image
+      run: |
+        docker push us-central1-docker.pkg.dev/${{ vars.PROJECT_ID }}/my-repo/gcp-test:${{ github.sha }}
