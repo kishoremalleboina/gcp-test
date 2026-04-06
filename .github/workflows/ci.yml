@@ -22,9 +22,25 @@ jobs:
       with:
         workload_identity_provider: projects/946678058338/locations/global/workloadIdentityPools/github-pool/providers/github-provider
         service_account: github-sa@dev-project-490411.iam.gserviceaccount.com
+     
+    # 🔐 Authenticate to GCP (OIDC)
+    - id: auth
+    uses: google-github-actions/auth@v2
+    with:
+      workload_identity_provider: "projects/946678058338/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+      service_account: "CICD-pipeline@dev-project-490411.iam.gserviceaccount.com"
 
+    # ⚙️ Setup gcloud
+    - name: Set up Cloud SDK
+    uses: google-github-actions/setup-gcloud@v2
+
+    # 🔑 Configure Docker Auth (VERY IMPORTANT)
     - name: Configure Docker
-      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+    run: |
+      gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+    - name: Configure Docker
+      run: 
+        gcloud auth configure-docker us-central1-docker.pkg.dev
 
     # 🔹 Run Unit Tests
     - name: Run Unit Tests
@@ -37,9 +53,9 @@ jobs:
     # 🔹 Build Docker Image
     - name: Build Image
       run: |
-        docker build -t us-central1-docker.pkg.dev/${{ vars.PROJECT_ID }}/my-repo/gcp-test:${{ github.sha }} .
+        docker build -t us-central1-docker.pkg.dev/${{ vars.PROJECT_ID }}/myartifactregistry/gcp-test:${{ github.sha }} .
 
     # 🔹 Push Image
     - name: Push Image
       run: |
-        docker push us-central1-docker.pkg.dev/${{ vars.PROJECT_ID }}/my-repo/gcp-test:${{ github.sha }}
+        docker push us-central1-docker.pkg.dev/${{ vars.PROJECT_ID }}/myartifactregistry/gcp-test:${{ github.sha }}
