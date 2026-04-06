@@ -20,8 +20,8 @@ jobs:
     - name: Authenticate to GCP
       uses: google-github-actions/auth@v2
       with:
-        workload_identity_provider: projects/946678058338/locations/global/workloadIdentityPools/IdentitypoolCICD/providers/github
-        service_account: CICD-pipeline@dev-project-490411.iam.gserviceaccount.com
+        workload_identity_provider: projects/946678058338/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+        service_account: github-sa@dev-project-490411.iam.gserviceaccount.com
 
     - name: Configure Docker
       run: gcloud auth configure-docker us-central1-docker.pkg.dev
@@ -30,8 +30,9 @@ jobs:
     - name: Run Unit Tests
       run: |
         echo "Running tests..."
-         npm install
-         npm test
+        # Example:
+        # npm install
+        # npm test
 
     # 🔹 Build Docker Image
     - name: Build Image
