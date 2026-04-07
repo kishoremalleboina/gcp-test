@@ -24,6 +24,10 @@ ingress:
   enabled: true
   host: myapp.example.com
 
+serviceAccount:
+  create: true
+  name: ""
+
 secrets:
   provider: gcp-secrets   # reference only (NOT actual secret values)
 
