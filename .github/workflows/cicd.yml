@@ -1,0 +1,64 @@
+name: CI-CD to GKE
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  id-token: write   # required for OIDC
+
+env:
+  PROJECT_ID: ${{ secrets.PROJECT_ID }}
+  REGION: us-central1
+  REPO: my-repo
+  IMAGE: myapp
+  CLUSTER: my-cluster
+  ZONE: us-central1-a
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # 1. Checkout code
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # 2. Authenticate to GCP (OIDC)
+    - name: Auth to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+        service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+    # 3. Setup gcloud
+    - name: Setup gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    # 4. Configure Docker
+    - name: Configure Docker
+      run: gcloud auth configure-docker $REGION-docker.pkg.dev
+
+    # 5. Build Image
+    - name: Build Image
+      run: |
+        docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:${{ github.sha }} .
+
+    # 6. Push Image
+    - name: Push Image
+      run: |
+        docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE:${{ github.sha }}
+
+    # 7. Get GKE Credentials
+    - name: Get Credentials
+      run: |
+        gcloud container clusters get-credentials $CLUSTER --zone $ZONE
+
+    # 8. Deploy using Helm
+    - name: Deploy with Helm
+      run: |
+        helm upgrade --install myapp ./helm/myapp \
+          --set image.repository=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$IMAGE \
+          --set image.tag=${{ github.sha }}

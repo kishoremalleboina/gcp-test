@@ -1,0 +1,11 @@
+appName: myapp
+
+image:
+  repository: ""
+  tag: ""
+
+service:
+  port: 80
+  targetPort: 8080
+
+replicaCount: 2
