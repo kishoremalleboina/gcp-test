@@ -1,0 +1,30 @@
+global:
+  namespace: dev
+
+backend:
+  name: backend
+  image: nginx
+  tag: latest
+  replicas: 2
+
+frontend:
+  name: frontend
+  image: nginx
+  tag: latest
+  replicas: 2
+
+service:
+  backend:
+    port: 80
+  frontend:
+    port: 80
+    type: LoadBalancer
+
+ingress:
+  enabled: true
+  host: myapp.example.com
+
+secrets:
+  provider: gcp-secrets   # reference only (NOT actual secret values)
+
+resources: {}
